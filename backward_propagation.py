@@ -49,6 +49,9 @@ def linear_activation_backward(dA,cache,activation = "RELU"):
 """
 This function implements backward propagation for a RELU unit
 
+Input:
+dA – post activation gradient of the current layer
+cache – contains both the linear cache and the activations cache
 
 """
 def relu_backward(dA,activation_cache):
@@ -63,8 +66,14 @@ def relu_backward(dA,activation_cache):
 
 """
 This function implements backward propagation for a RELU unit
+
+Input:
+dA – post activation gradient of the current layer
+cache – contains both the linear cache and the activations cache
+
 """
 def softmax_backward(dA,activation_cache):
+
     return "not implemented"
 
 """
