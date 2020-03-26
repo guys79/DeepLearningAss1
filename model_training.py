@@ -5,7 +5,7 @@ from forward_propagation import initialize_parameters, L_model_forward, compute_
 
 
 def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
-                  use_batchnorm=False, save_cost_at=100, acc_tier=0.005, same_acc_tier_spree=100):
+                  use_batchnorm=False, save_cost_at=100, acc_tier_size=0.005, early_stop_spree=100):
     """
     Implements a L-layer neural network. All layers but the last should have the ReLU activation function,
     and the final layer will apply the softmax activation function. The size of the output layer should be equal to
@@ -19,8 +19,8 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
     :param batch_size: the number of examples in a single training batch
     :param use_batchnorm: to batchnorm the output of layers
     :param save_cost_at: iteration modulo in which to save cost of output
-    :param acc_tier: accuracy tier size for knowing when to stop training
-    :param same_acc_tier_spree: length of spree of epochs in same acc_tier to stop training at
+    :param acc_tier_size: accuracy tier size for knowing when to stop training
+    :param early_stop_spree: length of spree of epochs in same acc_tier to stop training at
     :return: parameters – the parameters learnt by the system during the training
             costs – the values of the cost function (calculated by the compute_cost function)
             One value is to be saved after each 100 training iterations (e.g. 3000 iterations -> 30 values)
@@ -29,6 +29,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
     costs = []
     instance_count = X.shape[1]
     batches = int(instance_count / batch_size)
+    best_accuracy = 0
     iteration = 0
     while iteration != num_iterations:  # implemented as while to allow infinite max iterations
         cost = None
@@ -48,21 +49,13 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
             update_parameters(parameters, grads, learning_rate)
         if cost is not None:
             costs.append(cost)
-
+        if iteration % early_stop_spree == 0:  # check for early stop
+            accuracy = Predict(X, Y, parameters)
+            if accuracy < best_accuracy + acc_tier_size:
+                break  # end training
+            best_accuracy = accuracy
         iteration += 1
-
     return parameters, costs
-
-
-def accuracy(AL, Y):
-    """
-    Compute the accuracy of the network's predictions.
-    :param AL: final activation of network
-    :param Y: true labels
-    :return: percentage of the samples for which the correct label receives the highest confidence score
-    """
-    predictions = (AL == np.amax(AL, axis=0)).astype(int)
-    return np.sum(predictions * Y)/Y.shape[1]
 
 
 def Predict(X, Y, parameters):
@@ -74,4 +67,5 @@ def Predict(X, Y, parameters):
     :return: accuracy – the accuracy measure of the neural net on the provided data
     """
     AL = L_model_forward(X, parameters, False)[0]
-    return accuracy(AL, Y)
+    predictions = (AL == np.amax(AL, axis=0)).astype(int)
+    return np.sum(predictions * Y) / Y.shape[1]
