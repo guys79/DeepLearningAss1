@@ -29,7 +29,8 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
     costs = []
     instance_count = X.shape[1]
     batches = int(instance_count / batch_size)
-    for iteration in range(len(num_iterations)):
+    iteration = 0
+    while iteration != num_iterations:  # implemented as while to allow infinite max iterations
         cost = None
         if iteration % save_cost_at == 0 or iteration == len(num_iterations) - 1:
             cost = np.empty(0)
@@ -47,16 +48,21 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
             update_parameters(parameters, grads, learning_rate)
         if cost is not None:
             costs.append(cost)
+
+        iteration += 1
+
     return parameters, costs
 
 
-def accuracy(predictions, Y):
+def accuracy(AL, Y):
     """
-    Compute accuracy of predictions
-    :param predictions:
-    :param Y:
-    :return:
+    Compute the accuracy of the network's predictions.
+    :param AL: final activation of network
+    :param Y: true labels
+    :return: percentage of the samples for which the correct label receives the highest confidence score
     """
+    predictions = (AL == np.amax(AL, axis=0)).astype(int)
+    return np.sum(predictions * Y)/Y.shape[1]
 
 
 def Predict(X, Y, parameters):
@@ -67,5 +73,5 @@ def Predict(X, Y, parameters):
     :param parameters: python dictionary containing the DNN architecture’s parameters
     :return: accuracy – the accuracy measure of the neural net on the provided data
     """
-    predictions = np.round(L_model_forward(X, parameters, False)[0])
-    accuracy = np.mean(np.equal(predictions, Y).astype(int))
+    AL = L_model_forward(X, parameters, False)[0]
+    return accuracy(AL, Y)
