@@ -8,10 +8,10 @@ cache - A tuple of (A_prev,W,b). A_prev is the A values of the previous layer. W
 layer, The b value of the current layer
 """
 def Linear_backward(dZ, cache):
-    A_prev, W, b = cache
+    A_prev, W, b = cache['A'], cache['W'], cache['b']
     m = A_prev.shape[1] #number of samples
 
-    dA_prev = np.dot(W.T,dZ)
+    dA_prev = np.dot(W.T, dZ)
 
     dW = 1./m * np.dot(dZ,A_prev.T)
     db = 1./m * np.sum(dZ,axis=1,keepdims=True)
@@ -121,16 +121,13 @@ learning_rate – the learning rate used to update the parameters (the “alpha�
 """
 def update_parameters(parameters, grads, learning_rate):
 
-    # Assuming parameters contains 2 parameters for each layers. W and b
-    L = len(parameters) / 2
+    W = parameters['W']
+    b = parameters['b']
 
     #Gradient step
-    for l in range(L):
-        parameters["W" + str(l + 1)] = parameters["W" + str(l + 1)] - learning_rate * grads["dW" + str(l + 1)]
-        parameters["b" + str(l + 1)] = parameters["b" + str(l + 1)] - learning_rate * grads["db" + str(l + 1)]
-
-
-    return parameters
+    for i in range(len(b)):
+        W[i+1] -= learning_rate * grads["dW" + str(i + 1)]
+        b[i+1] -= learning_rate * grads["db" + str(i + 1)]
 
 
 
