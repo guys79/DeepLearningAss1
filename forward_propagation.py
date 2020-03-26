@@ -115,19 +115,3 @@ def compute_cost(AL, Y):
     """
     loss = -(1 / len(Y)) * (Y * np.log(AL) + (1 - Y) * np.log(1 - AL))
     return np.sum(loss * Y, axis=0)  # keep only loss from positive class
-
-
-instances = 5
-input_dim = 6
-output_dim = 3
-x = np.random.randn(input_dim, instances)
-layers = initialize_parameters([input_dim, 4, output_dim])
-AL, caches = L_model_forward(x, layers, False)
-y = np.zeros([output_dim, instances])
-y[-1] = np.ones(instances)
-# y = np.array([[0, 0, 0, 0, 0],
-#               [0, 0, 0, 0, 0],
-#               [1, 1, 1, 1, 1]])
-loss = compute_cost(AL, y)
-
-print('done')

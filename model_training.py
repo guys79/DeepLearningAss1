@@ -33,7 +33,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
     iteration = 0
     while iteration != num_iterations:  # implemented as while to allow infinite max iterations
         cost = None
-        if iteration % save_cost_at == 0 or iteration == len(num_iterations) - 1:
+        if iteration % save_cost_at == 0 or iteration == num_iterations - 1:  # save cost if modulo or last epoch
             cost = np.empty(0)
         for batch in range(batches + 1):
             batch_start = batch * batch_size
@@ -69,3 +69,15 @@ def Predict(X, Y, parameters):
     AL = L_model_forward(X, parameters, False)[0]
     predictions = (AL == np.amax(AL, axis=0)).astype(int)
     return np.sum(predictions * Y) / Y.shape[1]
+
+
+instances = 10
+input_dim = 6
+output_dim = 2
+x = np.random.randn(input_dim, instances)
+y = np.zeros([output_dim, instances])
+y[-1] = np.ones(instances)
+layers_dims = [input_dim, input_dim - 2, output_dim]
+parameters = L_layer_model(x, y, layers_dims, 0.05, 200, int(instances/2))
+
+print('done')
