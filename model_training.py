@@ -71,9 +71,7 @@ def Predict(X, Y, parameters):
     return np.sum(predictions * Y) / Y.shape[1]
 
 
-instances = 10
-input_dim = 6
-output_dim = 2
+instances, input_dim, output_dim = 10, 6, 2
 x = np.random.randn(input_dim, instances)
 y = np.zeros([output_dim, instances])
 y[-1] = np.ones(instances)
