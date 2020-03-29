@@ -15,7 +15,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
     :param Y: the “real” labels of the data, a vector of shape (num_of_classes, number of examples)
     :param layers_dims: a list containing the dimensions of each layer, including the input
     :param learning_rate: lr of the model
-    :param num_iterations: epochs
+    :param num_iterations: max epochs
     :param batch_size: the number of examples in a single training batch
     :param use_batchnorm: to batchnorm the output of layers
     :param save_cost_at: iteration modulo in which to save cost of output
@@ -76,6 +76,7 @@ x = np.random.randn(input_dim, instances)
 y = np.zeros([output_dim, instances])
 y[-1] = np.ones(instances)
 layers_dims = [input_dim, input_dim - 2, output_dim]
-parameters = L_layer_model(x, y, layers_dims, 0.05, 200, int(instances/2))
+parameters, costs = L_layer_model(x, y, layers_dims, 0.05, 200, int(instances/2))
+accuracy = Predict(x, y, parameters)
 
-print('done')
+print('accuracy = %.4f'%accuracy)

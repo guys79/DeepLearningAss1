@@ -37,7 +37,8 @@ def softmax(Z):
     :return: A – the activations of the layer.
             activation_cache – returns Z, which will be useful for the backpropagation
     """
-    return {'A': np.exp(Z) / np.sum(np.exp(Z)), 'activation_cache': Z}
+    exp = np.exp(Z)
+    return {'A': exp / np.sum(exp), 'activation_cache': Z}
 
 
 def relu(Z):
