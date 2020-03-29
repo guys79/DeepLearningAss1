@@ -79,4 +79,4 @@ layers_dims = [input_dim, input_dim - 2, output_dim]
 parameters, costs = L_layer_model(x, y, layers_dims, 0.05, 200, int(instances/2))
 accuracy = Predict(x, y, parameters)
 
-print('accuracy = %.4f'%accuracy)
+print('accuracy = %.4f' % accuracy)
