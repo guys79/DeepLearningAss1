@@ -50,16 +50,6 @@ def linear_activation_backward(dA, cache, activation="relu"):
     return Linear_backward(dZ, linear_cache)
 
 
-"""
-This function implements backward propagation for a relu unit
-
-Input:
-dA – post activation gradient of the current layer
-cache – contains both the linear cache and the activations cache
-
-"""
-
-
 def relu_backward(dA, activation_cache):
     """
     This function implements backward propagation for a relu unit

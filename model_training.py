@@ -5,7 +5,7 @@ from forward_propagation import initialize_parameters, L_model_forward, compute_
 
 
 def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
-                  use_batchnorm=False, save_cost_at=100, acc_tier_size=0.005, early_stop_spree=100):
+                  use_batchnorm=False, save_cost_at=100, acc_tier_size=0.005, early_stop_spree=100,validation_not_improving = 100):
     """
     Implements a L-layer neural network. All layers but the last should have the ReLU activation function,
     and the final layer will apply the softmax activation function. The size of the output layer should be equal to
@@ -25,12 +25,18 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
             costs – the values of the cost function (calculated by the compute_cost function)
             One value is to be saved after each 100 training iterations (e.g. 3000 iterations -> 30 values)
     """
+    X_train = X["train"]
+    X_validation = X["validation"]
+    Y_train = Y["train"]
+    Y_validation = Y["validation"]
     parameters = initialize_parameters(layers_dims)
     costs = []
-    instance_count = X.shape[1]
+    instance_count = X_train.shape[1]
     batches = int(instance_count / batch_size)
     best_accuracy = 0
     iteration = 0
+    count_no_cahnge = 0
+    validation_acc = -1
     while iteration != num_iterations:  # implemented as while to allow infinite max iterations
         cost = None
         if iteration % save_cost_at == 0 or iteration == num_iterations - 1:  # save cost if modulo or last epoch
@@ -40,8 +46,8 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
             if batch_start == instance_count:
                 continue  # in case the len of train set is a multiple of batch size
             batch_end = min((batch + 1) * batch_size, instance_count)  # avoid index out of bounds
-            X_batch = X[:, batch_start:batch_end]
-            Y_batch = Y[:, batch_start:batch_end]
+            X_batch = X_train[:, batch_start:batch_end]
+            Y_batch = Y_train[:, batch_start:batch_end]
             AL, caches = L_model_forward(X_batch, parameters, use_batchnorm)
             if cost is not None:
                 cost = np.append(cost, compute_cost(AL, Y_batch))
@@ -49,8 +55,19 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
             update_parameters(parameters, grads, learning_rate)
         if cost is not None:
             costs.append(cost)
+        # Validation
+        new_validation_acc = Predict(X_validation,Y_validation,parameters)
+        print("old validation accuracy %s" % validation_acc)
+        print("new validation accuracy %s" % new_validation_acc)
+        print()
+        if new_validation_acc <= validation_acc:
+            count_no_cahnge = count_no_cahnge + 1
+            if count_no_cahnge == validation_not_improving:
+                break
+        validation_acc = new_validation_acc
+
         if iteration % early_stop_spree == 0:  # check for early stop
-            accuracy = Predict(X, Y, parameters)
+            accuracy = Predict(X_train, Y_train, parameters)
             if accuracy < best_accuracy + acc_tier_size:
                 break  # end training
             best_accuracy = accuracy
@@ -76,7 +93,14 @@ x = np.random.randn(input_dim, instances)
 y = np.zeros([output_dim, instances])
 y[-1] = np.ones(instances)
 layers_dims = [input_dim, input_dim - 2, output_dim]
-parameters, costs = L_layer_model(x, y, layers_dims, 0.05, 200, int(instances/2))
+X = {"train": x, "validation": x}
+Y = {"train": y, "validation": y}
+parameters, costs = L_layer_model(X, Y ,layers_dims, 0.05, 200, int(instances/2))
 accuracy = Predict(x, y, parameters)
 
+print(x)
+print(y)
+print(layers_dims)
+
 print('accuracy = %.4f' % accuracy)
+print(costs)
