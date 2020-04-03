@@ -13,7 +13,7 @@ def initialize_parameters(layer_dims):
     for i in range(1, len(layer_dims)):
         rows = layer_dims[i]
         cols = layer_dims[i - 1]
-        W.append(np.random.randn(rows, cols))
+        W.append(np.random.randn(rows, cols)/100)
         b.append(np.zeros(rows).reshape(rows, 1))
     return {'W': W, 'b': b}
 
