@@ -43,26 +43,15 @@ def convert_to_matrix(y,num_of_class):
 def test_model():
     x,y = get_data_set()
     X_train, y_train, X_val, y_val, X_test, y_test = divide_data_set_into_train_test_validation_set(x,y)
-    """
-    print(X_train.shape)
-    print(y_train.shape)
-    print(X_val.shape)
-    print(y_val.shape)
-    print(X_test.shape)
-    print(y_test.shape)
-    
-    print(y_val)
-    """
     X = {"train": X_train, "validation": X_val}
     Y = {"train": y_train, "validation": y_val}
     layers_dims = [x.shape[1],20,7,5,10]
     learning_rate = 0.009
     num_iterations = 1000
     batch_size = 200
-    parameters, costs = L_layer_model(X,Y,layers_dims,learning_rate,num_iterations,batch_size,use_batchnorm=True)
-    print("accuracy %s" %Predict(X_test,y_test,parameters))
-    print(costs)
-
+    parameters, costs = L_layer_model(X,Y,layers_dims,learning_rate,num_iterations,batch_size)
+    print(Predict(X_test,y_test,parameters))
+    print(costs[0])
 
 
 test_model()

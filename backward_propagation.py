@@ -19,9 +19,7 @@ def Linear_backward(dZ, cache):
     dA_prev = np.dot(W.T, dZ)
 
     dW = 1. / num_samples * np.dot(dZ, A_prev.T)
-    #dW = np.dot(dZ, A_prev.T)
-    #db =  np.sum(dZ, axis=1, keepdims=True)
-    db =1. / num_samples*  np.sum(dZ, axis=1, keepdims=True)
+    db = 1. / num_samples * np.sum(dZ, axis=1, keepdims=True)
 
     return dA_prev, dW, db
 
@@ -44,9 +42,8 @@ def linear_activation_backward(dA, cache, activation="relu"):
     if activation == "relu":
         dZ = relu_backward(dA, activation_cache)
     elif activation == "softmax":
-        Y = cache[3]
-        AL = cache[2]
-        dZ = softmax_backward(dA, [AL, Y])
+        Y = cache[2]
+        dZ = softmax_backward(dA, [activation_cache, Y])
     else:
         raise ValueError('activation must be either "relu" or "softmax"')
 
@@ -76,8 +73,8 @@ def softmax_backward(dA, activation_cache):
     Y - the true labels vector (the "ground truth" - true classifications)
     Caches - list of caches containing for each layer: a) the linear cache; b) the activation cache
     """
-    Y = activation_cache[1]
-    A = activation_cache[0]
+    Z, Y = activation_cache
+    A = softmax(Z)['A']
     return A - Y
 
 
@@ -88,11 +85,12 @@ def L_model_backward(AL, Y, caches):
 
     # The dA for the last layer
     # dAL = - np.divide(Y, AL) - np.divide(1 - Y, 1 - AL)
-    #dAL = - np.divide(Y, AL) + np.divide(1 - Y, 1 - AL)
+    # dAL = - np.divide(Y, AL) + np.divide(1 - Y, 1 - AL)
+    dAL = AL
 
     # The last layer uses softmax
     grads["dA" + str(num_layers - 1)], grads["dW" + str(num_layers - 1)], grads["db" + str(num_layers - 1)] = \
-        linear_activation_backward("not Using this", caches[num_layers - 1] + [AL,Y], activation="softmax")
+        linear_activation_backward(dAL, caches[num_layers - 1] + [Y], activation="softmax")
 
     # Relu layers
     # From the last layer to the first
@@ -118,6 +116,6 @@ def update_parameters(parameters, grads, learning_rate):
     b = parameters['b']
 
     # Gradient step
-    for i in range(len(b)//2):
-        W[i+1] -= learning_rate * grads["dW" + str(i+1)]
-        b[i+1] -= learning_rate * grads["db" + str(i+1)]
+    for i in range(len(b)):
+        W[i] -= learning_rate * grads["dW" + str(i)]
+        b[i] -= learning_rate * grads["db" + str(i)]
