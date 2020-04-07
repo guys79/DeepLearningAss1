@@ -1,5 +1,5 @@
 import numpy as np
-
+from scipy.special import softmax as scipy_softmax
 
 def initialize_parameters(layer_dims):
     """
@@ -13,10 +13,19 @@ def initialize_parameters(layer_dims):
     for i in range(1, len(layer_dims)):
         rows = layer_dims[i]
         cols = layer_dims[i - 1]
+
         W.append(np.random.randn(rows, cols)/10)
-        # div = np.sqrt(2 / cols)
-        # W.append(np.random.randn(rows, cols) * div)
+        # W.append(np.random.randn(rows, cols) * np.sqrt(2 / cols))
         b.append(np.zeros(rows).reshape(rows, 1))
+
+        # if i == 1:
+        #     W.append(np.random.normal(0, 1 / np.sqrt(cols), [rows, cols]))
+        # else:
+        #     W.append(np.random.normal(0, 1, [rows, cols]))
+
+        # W.append(np.random.normal(0, 10 / np.sqrt(cols), [rows, cols]))
+        # b.append(np.zeros(rows).reshape(rows, 1))
+
     return {'W': W, 'b': b}
 
 
@@ -43,6 +52,16 @@ def softmax(Z):
     A = exp / np.sum(exp, axis=0)
     return {'A': A, 'activation_cache': Z}
 
+    # A = []
+    # for idx in range(0, Z.shape[1]):
+    #     curr = Z[:, idx]
+    #     e = np.exp(curr)
+    #     a = e / np.sum(e)
+    #     A.append(a)
+    # return {'A': np.array(A).T, 'activation_cache': Z}
+
+    # A = scipy_softmax(Z)
+    # return {'A': A, 'activation_cache': Z}
 
 def relu(Z):
     """

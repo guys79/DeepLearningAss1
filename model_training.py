@@ -5,7 +5,7 @@ from forward_propagation import initialize_parameters, L_model_forward, compute_
 
 
 def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
-                  use_batchnorm=False, save_cost_at=100, acc_tier_size=0.005, early_stop_spree=100,validation_not_improving = 100):
+                  use_batchnorm=False, save_cost_at=100, acc_tier_size=0.005, early_stop_spree=100):
     """
     Implements a L-layer neural network. All layers but the last should have the ReLU activation function,
     and the final layer will apply the softmax activation function. The size of the output layer should be equal to
@@ -26,14 +26,14 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
             One value is to be saved after each 100 training iterations (e.g. 3000 iterations -> 30 values)
     """
     X_train = X["train"]
-    X_validation = X["validation"]
+    X_val = X["validation"]
     Y_train = Y["train"]
-    Y_validation = Y["validation"]
+    Y_val = Y["validation"]
     parameters = initialize_parameters(layers_dims)
     costs = []
     instance_count = X_train.shape[1]
     batches = int(instance_count / batch_size)
-    best_accuracy = 0
+    best_val_acc = -1
     iteration = 0
     count_no_cahnge = 0
     validation_acc = -1
@@ -56,23 +56,15 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
         if cost is not None:
             costs.append(cost)
 
-        # # Validation
-        # new_validation_acc = Predict(X_validation,Y_validation,parameters)
-        #
-        # if new_validation_acc <= validation_acc:
-        #     count_no_cahnge = count_no_cahnge + 1
-        #     if count_no_cahnge == validation_not_improving:
-        #         break
-        # validation_acc = new_validation_acc
-
-        accuracy = Predict(X_train, Y_train, parameters)
-        print('%d train acc = %.4f' % (iteration, accuracy))
+        train_acc = Predict(X_train, Y_train, parameters)
+        val_acc = Predict(X_val, Y_val, parameters)
+        print('%d train_acc=%.4f val_acc=%.4f' % (iteration, train_acc, val_acc))
 
         if iteration % early_stop_spree == 0:  # check for early stop
-            # accuracy = Predict(X_train, Y_train, parameters)
-            if accuracy < best_accuracy + acc_tier_size:
+            if val_acc < best_val_acc + acc_tier_size:
                 break  # end training
-            best_accuracy = accuracy
+            best_val_acc = val_acc
+
         iteration += 1
     return parameters, costs
 

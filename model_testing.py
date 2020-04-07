@@ -8,8 +8,8 @@ def get_data_set():
     :return: The data set (MNIST)
     """
     (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
-    x = np.concatenate((x_train, x_test), axis=0)[:1000]
-    y = np.concatenate((y_train, y_test), axis=0)[:1000]
+    x = np.concatenate((x_train, x_test), axis=0)
+    y = np.concatenate((y_train, y_test), axis=0)
     x = np.reshape(x,(x.shape[0], x.shape[1]*x.shape[2]))
 
     return x,y
