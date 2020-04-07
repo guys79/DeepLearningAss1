@@ -1,11 +1,36 @@
+import csv
+
 import numpy as np
 
 from backward_propagation import L_model_backward, update_parameters
 from forward_propagation import initialize_parameters, L_model_forward, compute_cost
 
 
+def get_batches(batch_size, x_train, y_train):
+    """
+    Get the list of batches for training
+    :param batch_num: num of batches
+    :param batch_size: size of batch
+    :param x_train: train instances
+    :param y_train: train labels
+    :return: list of batches
+    """
+    instance_count = y_train.shape[1]
+    batch_num = int(instance_count / batch_size)
+    batches = []
+    for batch in range(batch_num + 1):
+        batch_start = batch * batch_size
+        if batch_start == instance_count:
+            break  # in case the len of train set is a multiple of batch size
+        batch_end = min((batch + 1) * batch_size, instance_count)  # avoid index out of bounds
+        x_batch = x_train[:, batch_start:batch_end]
+        y_batch = y_train[:, batch_start:batch_end]
+        batches.append([x_batch, y_batch])
+    return batches
+
+
 def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
-                  use_batchnorm=False, iterations_to_check=100, acc_tier_size=0.005):
+                  use_batchnorm=False, iterations_to_check=100, cost_tier_size=1):
     """
     Implements a L-layer neural network. All layers but the last should have the ReLU activation function,
     and the final layer will apply the softmax activation function. The size of the output layer should be equal to
@@ -19,51 +44,55 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
     :param batch_size: the number of examples in a single training batch
     :param use_batchnorm: to batchnorm the output of layers
     :param save_cost_at: iteration modulo in which to save cost of output
-    :param acc_tier_size: accuracy tier size for knowing when to stop training
+    :param cost_tier_size: accuracy tier size for knowing when to stop training
     :param iterations_to_check: length of spree of epochs in same acc_tier to stop training at
     :return: parameters – the parameters learnt by the system during the training
             costs – the values of the cost function (calculated by the compute_cost function)
             One value is to be saved after each 100 training iterations (e.g. 3000 iterations -> 30 values)
     """
-    X_train = X["train"]
-    X_val = X["validation"]
-    Y_train = Y["train"]
-    Y_val = Y["validation"]
+    X_train, X_val = X
+    Y_train, Y_val = Y
+    batches = get_batches(batch_size, X_train, Y_train)
     parameters = initialize_parameters(layers_dims)
+    best_val_cost = -1
     costs = []
-    instance_count = X_train.shape[1]
-    batches = int(instance_count / batch_size)
-    best_val_acc = -1
+    epoch = 1
     iteration = 0
-    while iteration != num_iterations:  # implemented as while to allow infinite max iterations
-        cost = None
-        if iteration % iterations_to_check == 0 or iteration == num_iterations - 1:  # save cost if modulo or last epoch
-            cost = np.empty(0)
-        for batch in range(batches + 1):
-            batch_start = batch * batch_size
-            if batch_start == instance_count:
-                continue  # in case the len of train set is a multiple of batch size
-            batch_end = min((batch + 1) * batch_size, instance_count)  # avoid index out of bounds
-            X_batch = X_train[:, batch_start:batch_end]
-            Y_batch = Y_train[:, batch_start:batch_end]
+    done = False
+    with open('log.csv', 'w', newline='') as log:
+        log_writer = csv.writer(log)
+        log_writer.writerow(['epoch', 'iteration', 'batch_cost', 'val_cost', 'batch_acc', 'val_acc'])
+    while not done:
+        for X_batch, Y_batch in batches:
             AL, caches = L_model_forward(X_batch, parameters, use_batchnorm)
-            if cost is not None:
-                cost = np.append(cost, compute_cost(AL, Y_batch))
             grads = L_model_backward(AL, Y_batch, caches)
             update_parameters(parameters, grads, learning_rate)
-        # if cost is not None:
-        #     costs.append(cost)
 
-        if iteration % iterations_to_check == 0:  # check for early stop
-            costs.append(cost)
-            train_acc = Predict(X_train, Y_train, parameters)
-            val_acc = Predict(X_val, Y_val, parameters)
-            print('%d train_cost=%d train_acc=%.4f val_acc=%.4f' % (iteration, np.sum(cost), train_acc, val_acc))
-            if val_acc < best_val_acc + acc_tier_size:
+            # do every iterations_to_check iterations
+            if iteration % iterations_to_check == 0:
+                batch_cost = np.sum(compute_cost(AL, Y_batch))
+                val_cost = np.sum(compute_cost(L_model_forward(X_val, parameters, use_batchnorm)[0], Y_val))
+                if best_val_cost == -1:
+                    best_val_cost = val_cost + cost_tier_size  # initial value
+                costs.append(batch_cost)
+                batch_acc = Predict(X_batch, Y_batch, parameters)
+                val_acc = Predict(X_val, Y_val, parameters)
+                print('iter=%d batch_cost=%d val_cost=%d (best=%d) batch_acc=%.4f val_acc=%.4f'
+                      % (iteration, batch_cost, val_cost, best_val_cost, batch_acc, val_acc))
+                with open('log.csv', 'a', newline='') as log:
+                    log_writer = csv.writer(log)
+                    log_writer.writerow([epoch, iteration, batch_cost, val_cost, batch_acc, val_acc])
+                if val_cost > best_val_cost - cost_tier_size:  # no improvement
+                    done = True
+                    break  # end training
+                best_val_cost = val_cost
+
+            iteration += 1
+            if iteration == num_iterations:
+                done = True
                 break  # end training
-            best_val_acc = val_acc
-
-        iteration += 1
+        epoch += 1
+    print('epochs = %d' % epoch)
     return parameters, costs
 
 
