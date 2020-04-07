@@ -10,8 +10,8 @@ def get_data_set():
     :return: The data set (MNIST)
     """
     (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
-    x = np.concatenate((x_train, x_test), axis=0)
-    y = np.concatenate((y_train, y_test), axis=0)
+    x = np.concatenate((x_train, x_test), axis=0)[:1000]
+    y = np.concatenate((y_train, y_test), axis=0)[:1000]
     x = np.reshape(x, (x.shape[0], x.shape[1] * x.shape[2]))
 
     return x, y
@@ -53,10 +53,10 @@ def test_model():
     layers_dims = [x.shape[1], 20, 7, 5, 10]
     learning_rate = 0.009
     num_iterations = 1000
-    batch_size = 200
+    batch_size = 256
     parameters, costs = L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size)
     print('test acc = %.4f' % Predict(X_test, y_test, parameters))
-    print('first val of last cost values to see if not nan: %.4f' % costs[-1][0])
+    # print('first val of last cost values to see if not nan: %.4f' % costs[-1][0])
 
 
 test_model()

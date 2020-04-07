@@ -5,7 +5,7 @@ from forward_propagation import initialize_parameters, L_model_forward, compute_
 
 
 def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
-                  use_batchnorm=False, save_cost_at=100, acc_tier_size=0.005, early_stop_spree=100):
+                  use_batchnorm=False, iterations_to_check=100, acc_tier_size=0.005):
     """
     Implements a L-layer neural network. All layers but the last should have the ReLU activation function,
     and the final layer will apply the softmax activation function. The size of the output layer should be equal to
@@ -20,7 +20,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
     :param use_batchnorm: to batchnorm the output of layers
     :param save_cost_at: iteration modulo in which to save cost of output
     :param acc_tier_size: accuracy tier size for knowing when to stop training
-    :param early_stop_spree: length of spree of epochs in same acc_tier to stop training at
+    :param iterations_to_check: length of spree of epochs in same acc_tier to stop training at
     :return: parameters – the parameters learnt by the system during the training
             costs – the values of the cost function (calculated by the compute_cost function)
             One value is to be saved after each 100 training iterations (e.g. 3000 iterations -> 30 values)
@@ -37,7 +37,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
     iteration = 0
     while iteration != num_iterations:  # implemented as while to allow infinite max iterations
         cost = None
-        if iteration % save_cost_at == 0 or iteration == num_iterations - 1:  # save cost if modulo or last epoch
+        if iteration % iterations_to_check == 0 or iteration == num_iterations - 1:  # save cost if modulo or last epoch
             cost = np.empty(0)
         for batch in range(batches + 1):
             batch_start = batch * batch_size
@@ -51,14 +51,14 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
                 cost = np.append(cost, compute_cost(AL, Y_batch))
             grads = L_model_backward(AL, Y_batch, caches)
             update_parameters(parameters, grads, learning_rate)
-        if cost is not None:
+        # if cost is not None:
+        #     costs.append(cost)
+
+        if iteration % iterations_to_check == 0:  # check for early stop
             costs.append(cost)
-
-        train_acc = Predict(X_train, Y_train, parameters)
-        val_acc = Predict(X_val, Y_val, parameters)
-        print('%d train_acc=%.4f val_acc=%.4f' % (iteration, train_acc, val_acc))
-
-        if iteration % early_stop_spree == 0:  # check for early stop
+            train_acc = Predict(X_train, Y_train, parameters)
+            val_acc = Predict(X_val, Y_val, parameters)
+            print('%d train_cost=%d train_acc=%.4f val_acc=%.4f' % (iteration, np.sum(cost), train_acc, val_acc))
             if val_acc < best_val_acc + acc_tier_size:
                 break  # end training
             best_val_acc = val_acc
