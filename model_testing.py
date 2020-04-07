@@ -60,7 +60,7 @@ def test_model():
     num_iterations = 1000
     batch_size = 200
     parameters, costs = L_layer_model(X,Y,layers_dims,learning_rate,num_iterations,batch_size)
-    print(Predict(X_test,y_test,parameters))
+    print('test acc = %.4f' % Predict(X_test,y_test,parameters))
     # print(costs)
     #L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
      #                 use_batchnorm=False, save_cost_at=100, acc_tier_size=0.005, early_stop_spree=100,
