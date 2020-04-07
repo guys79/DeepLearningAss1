@@ -13,8 +13,13 @@ def initialize_parameters(layer_dims):
     for i in range(1, len(layer_dims)):
         rows = layer_dims[i]
         cols = layer_dims[i - 1]
-        W.append(np.random.randn(rows, cols)/100)
-        b.append(np.zeros(rows).reshape(rows, 1))
+        print("rows %s and cols %s" % (rows,cols))
+        #W.append(np.random.randn(rows, cols)/100+1)
+        #W.append(np.random.randn(rows, cols)*0.01)
+        W.append(np.random.randn(layer_dims[i], layer_dims[i - 1]) * np.sqrt(2 / layer_dims[i - 1]))
+        #b.append(np.zeros(rows).reshape(rows, 1))
+        b.append(np.array(np.zeros(layer_dims[i])).reshape((layer_dims[i],1)))
+
     return {'W': W, 'b': b}
 
 
@@ -37,8 +42,15 @@ def softmax(Z):
     :return: A – the activations of the layer.
             activation_cache – returns Z, which will be useful for the backpropagation
     """
-    exp = np.exp(Z)
-    return {'A': exp / np.sum(exp), 'activation_cache': Z}
+    softmax_ouptput = []
+    cols = Z.shape[1]
+    for col_index in range(cols):
+        example = Z[:,col_index]
+        example = np.exp(example)
+        example = example / np.sum(example)
+        softmax_ouptput.append(example)
+    softmax_ouptput = np.array(softmax_ouptput).T
+    return {'A': softmax_ouptput, 'activation_cache': Z}
 
 
 def relu(Z):
@@ -114,5 +126,12 @@ def compute_cost(AL, Y):
     :param Y: the labels vector (i.e. the ground truth)
     :return: cost – the cross-entropy cost
     """
-    loss = -(1 / len(Y)) * (Y * np.log(AL) + (1 - Y) * np.log(1 - AL))
-    return np.sum(loss * Y, axis=0)  # keep only loss from positive class
+    sum_of_logs = 0
+
+    cols = AL.shape[1]
+    for col_index in range(cols):
+        example = AL[:, col_index]
+        answers = Y[:, col_index].T
+        sum_of_logs = sum_of_logs + np.log(np.dot(example,answers))
+    cost = -1*sum_of_logs/col_index
+    return cost  # keep only loss from positive class

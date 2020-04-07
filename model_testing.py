@@ -8,8 +8,8 @@ def get_data_set():
     :return: The data set (MNIST)
     """
     (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
-    x = np.concatenate((x_train, x_test), axis=0)[:100]
-    y = np.concatenate((y_train, y_test), axis=0)[:100]
+    x = np.concatenate((x_train, x_test), axis=0)
+    y = np.concatenate((y_train, y_test), axis=0)
     x = np.reshape(x,(x.shape[0], x.shape[1]*x.shape[2]))
 
     return x,y
@@ -57,15 +57,12 @@ def test_model():
     Y = {"train": y_train, "validation": y_val}
     layers_dims = [x.shape[1],20,7,5,10]
     learning_rate = 0.009
-    num_iterations = 1000
+    num_iterations = 100
     batch_size = 200
-    parameters, costs = L_layer_model(X,Y,layers_dims,learning_rate,num_iterations,batch_size)
-    print(Predict(X_test,y_test,parameters))
+    parameters, costs = L_layer_model(X,Y,layers_dims,learning_rate,num_iterations,batch_size,use_batchnorm=True)
+    print("accuracy %s" %Predict(X_test,y_test,parameters))
     print(costs)
-    #L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
-     #                 use_batchnorm=False, save_cost_at=100, acc_tier_size=0.005, early_stop_spree=100,
-      #                validation_not_improving=100):
-    #parameters, costs = L_layer_model(X,Y)
+
 
 
 test_model()
