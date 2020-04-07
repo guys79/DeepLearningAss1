@@ -35,8 +35,6 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
     batches = int(instance_count / batch_size)
     best_val_acc = -1
     iteration = 0
-    count_no_cahnge = 0
-    validation_acc = -1
     while iteration != num_iterations:  # implemented as while to allow infinite max iterations
         cost = None
         if iteration % save_cost_at == 0 or iteration == num_iterations - 1:  # save cost if modulo or last epoch
