@@ -88,23 +88,3 @@ def Predict(X, Y, parameters):
     AL = L_model_forward(X, parameters, False)[0]
     predictions = (AL == np.amax(AL, axis=0)).astype(int)
     return np.sum(predictions * Y) / Y.shape[1]
-
-"""
-instances, input_dim, output_dim = 10, 6, 2
-x = np.random.randn(input_dim, instances)
-y = np.zeros([output_dim, instances])
-y[-1] = np.ones(instances)
-layers_dims = [input_dim, input_dim - 2, output_dim]
-X = {"train": x, "validation": x}
-Y = {"train": y, "validation": y}
-parameters, costs = L_layer_model(X, Y ,layers_dims, 0.05, 200, int(instances/2))
-accuracy = Predict(x, y, parameters)
-
-print(x)
-print(y)
-print(y.shape)
-print(layers_dims)
-
-print('accuracy = %.4f' % accuracy)
-print(costs)
-"""

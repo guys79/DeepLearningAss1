@@ -14,6 +14,8 @@ def initialize_parameters(layer_dims):
         rows = layer_dims[i]
         cols = layer_dims[i - 1]
         W.append(np.random.randn(rows, cols)/10)
+        # div = np.sqrt(2 / cols)
+        # W.append(np.random.randn(rows, cols) * div)
         b.append(np.zeros(rows).reshape(rows, 1))
     return {'W': W, 'b': b}
 
@@ -39,7 +41,6 @@ def softmax(Z):
     """
     exp = np.exp(Z - np.max(Z))
     A = exp / np.sum(exp, axis=0)
-    # A = exp / exp.sum(axis=0, keepdims=True)
     return {'A': A, 'activation_cache': Z}
 
 
@@ -116,5 +117,6 @@ def compute_cost(AL, Y):
     :param Y: the labels vector (i.e. the ground truth)
     :return: cost – the cross-entropy cost
     """
-    loss = -(1 / len(Y)) * (Y * np.log(AL) + (1 - Y) * np.log(1 - AL))
+    eps = 0.00000000001
+    loss = -(1 / len(Y)) * (Y * np.log(AL + eps) + (1 - Y) * np.log(1 - AL + eps))
     return np.sum(loss * Y, axis=0)  # keep only loss from positive class

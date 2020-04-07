@@ -50,8 +50,8 @@ def test_model():
     num_iterations = 1000
     batch_size = 200
     parameters, costs = L_layer_model(X,Y,layers_dims,learning_rate,num_iterations,batch_size)
-    print(Predict(X_test,y_test,parameters))
-    print(costs[0])
+    print('test acc = %.4f' % Predict(X_test,y_test,parameters))
+    print('first val of last cost values to see if not nan: %.4f' % costs[-1][0])
 
 
 test_model()

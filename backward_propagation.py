@@ -18,8 +18,8 @@ def Linear_backward(dZ, cache):
 
     dA_prev = np.dot(W.T, dZ)
 
-    dW = 1. / num_samples * np.dot(dZ, A_prev.T)
-    db = 1. / num_samples * np.sum(dZ, axis=1, keepdims=True)
+    dW = np.dot(dZ, A_prev.T) / num_samples
+    db = np.sum(dZ, axis=1, keepdims=True) / num_samples
 
     return dA_prev, dW, db
 
@@ -80,24 +80,20 @@ def softmax_backward(dA, activation_cache):
 
 def L_model_backward(AL, Y, caches):
     grads = {}  # The dictionary with the gradients
-    num_layers = len(caches)
+    depth = len(caches)
     Y = Y.reshape(AL.shape)
+    dAL = AL  # will be ignored for last layer
+    
+    # softmax layer
+    layer_grads = linear_activation_backward(dAL, caches[depth - 1] + [Y], activation='softmax')
+    grads['dA' + str(depth - 1)], grads['dW' + str(depth - 1)], grads['db' + str(depth - 1)] = layer_grads
 
-    # The dA for the last layer
-    # dAL = - np.divide(Y, AL) - np.divide(1 - Y, 1 - AL)
-    # dAL = - np.divide(Y, AL) + np.divide(1 - Y, 1 - AL)
-    dAL = AL
-
-    # The last layer uses softmax
-    grads["dA" + str(num_layers - 1)], grads["dW" + str(num_layers - 1)], grads["db" + str(num_layers - 1)] = \
-        linear_activation_backward(dAL, caches[num_layers - 1] + [Y], activation="softmax")
-
-    # Relu layers
-    # From the last layer to the first
-    for i in reversed(range(num_layers - 1)):
+    # relu layers
+    for i in reversed(range(depth - 1)):
         cache = caches[i]
-        grads["dA" + str(i)], grads["dW" + str(i)], grads[
-            "db" + str(i)] = linear_activation_backward(grads["dA" + str(i + 1)], cache)
+        layer_grads = linear_activation_backward(grads['dA' + str(i + 1)], cache)
+        grads['dA' + str(i)], grads['dW' + str(i)], grads['db' + str(i)] = layer_grads
+   
     return grads
 
 
