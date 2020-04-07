@@ -29,7 +29,9 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
     X_validation = X["validation"]
     Y_train = Y["train"]
     Y_validation = Y["validation"]
+
     parameters = initialize_parameters(layers_dims)
+
     costs = []
     instance_count = X_train.shape[1]
     batches = int(instance_count / batch_size)
@@ -55,22 +57,28 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
             update_parameters(parameters, grads, learning_rate)
         if cost is not None:
             costs.append(cost)
+
+
         # Validation
         new_validation_acc = Predict(X_validation,Y_validation,parameters)
 
-        # if new_validation_acc <= validation_acc:
-        #     count_no_cahnge = count_no_cahnge + 1
-        #     if count_no_cahnge == validation_not_improving:
-        #         break
-        # validation_acc = new_validation_acc
+        if new_validation_acc <= validation_acc:
+            print("%d new %.5f old %.5f" % (iteration, new_validation_acc, validation_acc))
+            count_no_cahnge = count_no_cahnge + 1
+            if count_no_cahnge == validation_not_improving:
+                print("here1")
+                break
+        else:
+            print("%d new %.5f old %.5f - improved!" % (iteration, new_validation_acc,validation_acc))
+            count_no_cahnge = 0
+        validation_acc = new_validation_acc
 
         if iteration % early_stop_spree == 0:  # check for early stop
             accuracy = Predict(X_train, Y_train, parameters)
             if accuracy < best_accuracy + acc_tier_size:
+                print("here2")
                 break  # end training
             best_accuracy = accuracy
-
-        print('%d acc=%.4f' % (iteration, Predict(X_train, Y_train, parameters)))
         iteration += 1
     return parameters, costs
 
@@ -84,9 +92,8 @@ def Predict(X, Y, parameters):
     :return: accuracy – the accuracy measure of the neural net on the provided data
     """
     AL = L_model_forward(X, parameters, False)[0]
-    # print(AL)
+
     predictions = (AL == np.amax(AL, axis=0)).astype(int)
-    # print(predictions)
     return np.sum(predictions * Y) / Y.shape[1]
 
 """
