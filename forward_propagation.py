@@ -13,7 +13,7 @@ def initialize_parameters(layer_dims):
     for i in range(1, len(layer_dims)):
         rows = layer_dims[i]
         cols = layer_dims[i - 1]
-        W.append(np.random.randn(rows, cols)/100)
+        W.append(np.random.randn(rows, cols)/10)
         b.append(np.zeros(rows).reshape(rows, 1))
     return {'W': W, 'b': b}
 
@@ -37,8 +37,10 @@ def softmax(Z):
     :return: A – the activations of the layer.
             activation_cache – returns Z, which will be useful for the backpropagation
     """
-    exp = np.exp(Z)
-    return {'A': exp / np.sum(exp), 'activation_cache': Z}
+    exp = np.exp(Z - np.max(Z))
+    A = exp / np.sum(exp, axis=0)
+    # A = exp / exp.sum(axis=0, keepdims=True)
+    return {'A': A, 'activation_cache': Z}
 
 
 def relu(Z):

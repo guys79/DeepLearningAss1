@@ -38,7 +38,6 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
     count_no_cahnge = 0
     validation_acc = -1
     while iteration != num_iterations:  # implemented as while to allow infinite max iterations
-        print(iteration)
         cost = None
         if iteration % save_cost_at == 0 or iteration == num_iterations - 1:  # save cost if modulo or last epoch
             cost = np.empty(0)
@@ -59,17 +58,19 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
         # Validation
         new_validation_acc = Predict(X_validation,Y_validation,parameters)
 
-        if new_validation_acc <= validation_acc:
-            count_no_cahnge = count_no_cahnge + 1
-            if count_no_cahnge == validation_not_improving:
-                break
-        validation_acc = new_validation_acc
+        # if new_validation_acc <= validation_acc:
+        #     count_no_cahnge = count_no_cahnge + 1
+        #     if count_no_cahnge == validation_not_improving:
+        #         break
+        # validation_acc = new_validation_acc
 
         if iteration % early_stop_spree == 0:  # check for early stop
             accuracy = Predict(X_train, Y_train, parameters)
             if accuracy < best_accuracy + acc_tier_size:
                 break  # end training
             best_accuracy = accuracy
+
+        print('%d acc=%.4f' % (iteration, Predict(X_train, Y_train, parameters)))
         iteration += 1
     return parameters, costs
 
@@ -83,9 +84,9 @@ def Predict(X, Y, parameters):
     :return: accuracy – the accuracy measure of the neural net on the provided data
     """
     AL = L_model_forward(X, parameters, False)[0]
-    print(AL)
+    # print(AL)
     predictions = (AL == np.amax(AL, axis=0)).astype(int)
-    print(predictions)
+    # print(predictions)
     return np.sum(predictions * Y) / Y.shape[1]
 
 """

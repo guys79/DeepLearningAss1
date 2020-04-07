@@ -62,7 +62,7 @@ def relu_backward(dA, activation_cache):
     Z = activation_cache
     dZ = np.ones(Z.shape)
     dZ[Z <= 0] = 0
-    return dZ
+    return dZ * dA
 
 
 def softmax_backward(dA, activation_cache):
