@@ -55,7 +55,8 @@ X_train, y_train, X_val, y_val, X_test, y_test = divide_dataset(x, y, 10)
 X = [X_train, X_val]
 Y = [y_train,  y_val]
 layers_dims = [x.shape[1], 20, 7, 5, 10]
-parameters, costs = L_layer_model(X, Y, layers_dims, 0.009, -1, 2000)
-print('train acc = %.4f' % Predict(X_train, y_train, parameters))
-print('test acc = %.4f' % Predict(X_test, y_test, parameters))
+use_batchnorm = True
+parameters, costs = L_layer_model(X, Y, layers_dims, 0.009, -1, 2000, use_batchnorm=use_batchnorm)
+print('train acc = %.4f' % Predict(X_train, y_train, parameters, use_batchnorm))
+print('test acc = %.4f' % Predict(X_test, y_test, parameters, use_batchnorm))
 

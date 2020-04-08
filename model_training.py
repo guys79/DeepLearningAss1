@@ -29,8 +29,8 @@ def get_batches(batch_size, x_train, y_train):
     return batches
 
 
-def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
-                  use_batchnorm=False, iterations_in_round=100, cost_tier_size=1):
+def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, use_batchnorm,
+                  iterations_in_round=100, cost_tier_size=1):
     """
     Implements a L-layer neural network. All layers but the last should have the ReLU activation function,
     and the final layer will apply the softmax activation function. The size of the output layer should be equal to
@@ -77,7 +77,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
                 costs.append(best_val_cost_curr_round)
                 if best_val_cost_prev_round == -1:
                     best_val_cost_prev_round = best_val_cost_curr_round + cost_tier_size  # initial value
-                val_acc = Predict(X_val, Y_val, parameters)
+                val_acc = Predict(X_val, Y_val, parameters, use_batchnorm)
                 print('epoch=%d iter=%d val_cost=%d val_acc=%.4f'
                       % (epoch, iteration, best_val_cost_curr_round, val_acc))
                 with open('log.csv', 'a', newline='') as log:
@@ -97,7 +97,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
     return parameters, costs
 
 
-def Predict(X, Y, parameters):
+def Predict(X, Y, parameters, use_batchnorm):
     """
     The function receives an input data and the true labels and calculates the accuracy of the trained nn on the data.
     :param X: the input data, a numpy array of shape (height*width, number_of_examples)
@@ -105,6 +105,6 @@ def Predict(X, Y, parameters):
     :param parameters: python dictionary containing the DNN architecture’s parameters
     :return: accuracy – the accuracy measure of the neural net on the provided data
     """
-    AL = L_model_forward(X, parameters, False)[0]
+    AL = L_model_forward(X, parameters, use_batchnorm)[0]
     predictions = (AL == np.amax(AL, axis=0)).astype(int)
     return np.sum(predictions * Y) / Y.shape[1]
