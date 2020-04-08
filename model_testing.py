@@ -6,27 +6,26 @@ from model_training import Predict, L_layer_model
 
 def get_data_set():
     """
-    This function will return the dataSet
+    Returns the MNIST dataSet uniting the train and test it returns
     :return: The data set (MNIST)
     """
     (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
-    x = np.concatenate((x_train, x_test), axis=0)#[:1000]
-    y = np.concatenate((y_train, y_test), axis=0)#[:1000]
+    x = np.concatenate((x_train, x_test), axis=0)
+    y = np.concatenate((y_train, y_test), axis=0)
     x = np.reshape(x, (x.shape[0], x.shape[1] * x.shape[2]))
 
     return x, y
 
 
-def divide_data_set_into_train_test_validation_set(x, y):
+def divide_dataset(x, y, num_of_classes):
     """
-    This function will split the dataSet into train validation and test sets
+    This function will split the dataset into train validation and test sets
     :param x: The features (instances)
     :param y: The true nlabels of the instances (classes)
     :return: train validation and test sets
     """
     X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(x, y, test_size=0.2)
     X_train, X_val, y_train, y_val = sklearn.model_selection.train_test_split(X_train, y_train, test_size=0.2)
-    num_of_classes = 10
     X_train = X_train.T
     y_train = convert_to_matrix(y_train, num_of_classes)
     X_val = X_val.T
@@ -52,13 +51,11 @@ def convert_to_matrix(y, num_of_class):
 
 # main
 x, y = get_data_set()
-X_train, y_train, X_val, y_val, X_test, y_test = divide_data_set_into_train_test_validation_set(x, y)
+X_train, y_train, X_val, y_val, X_test, y_test = divide_dataset(x, y, 10)
 X = [X_train, X_val]
 Y = [y_train,  y_val]
 layers_dims = [x.shape[1], 20, 7, 5, 10]
-learning_rate = 0.009
-num_iterations = -1
-batch_size = 256
-parameters, costs = L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, iterations_to_check=100)
+parameters, costs = L_layer_model(X, Y, layers_dims, 0.009, -1, 2000)
+print('train acc = %.4f' % Predict(X_train, y_train, parameters))
 print('test acc = %.4f' % Predict(X_test, y_test, parameters))
 
