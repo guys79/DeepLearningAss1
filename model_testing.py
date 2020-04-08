@@ -58,7 +58,7 @@ Y = [y_train,  y_val]
 layers_dims = [x.shape[1], 20, 7, 5, 10]
 learning_rate = 0.009
 num_iterations = -1
-batch_size = 2048
-parameters, costs = L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size)
+batch_size = 256
+parameters, costs = L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, iterations_to_check=100)
 print('test acc = %.4f' % Predict(X_test, y_test, parameters))
 

@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.special import softmax as scipy_softmax
+
 
 def initialize_parameters(layer_dims):
     """
@@ -13,18 +13,8 @@ def initialize_parameters(layer_dims):
     for i in range(1, len(layer_dims)):
         rows = layer_dims[i]
         cols = layer_dims[i - 1]
-
         W.append(np.random.randn(rows, cols)/10)
-        # W.append(np.random.randn(rows, cols) * np.sqrt(2 / cols))
         b.append(np.zeros(rows).reshape(rows, 1))
-
-        # if i == 1:
-        #     W.append(np.random.normal(0, 1 / np.sqrt(cols), [rows, cols]))
-        # else:
-        #     W.append(np.random.normal(0, 1, [rows, cols]))
-
-        # W.append(np.random.normal(0, 10 / np.sqrt(cols), [rows, cols]))
-        # b.append(np.zeros(rows).reshape(rows, 1))
 
     return {'W': W, 'b': b}
 
@@ -52,16 +42,6 @@ def softmax(Z):
     A = exp / np.sum(exp, axis=0)
     return {'A': A, 'activation_cache': Z}
 
-    # A = []
-    # for idx in range(0, Z.shape[1]):
-    #     curr = Z[:, idx]
-    #     e = np.exp(curr)
-    #     a = e / np.sum(e)
-    #     A.append(a)
-    # return {'A': np.array(A).T, 'activation_cache': Z}
-
-    # A = scipy_softmax(Z)
-    # return {'A': A, 'activation_cache': Z}
 
 def relu(Z):
     """
@@ -95,14 +75,14 @@ def linear_activation_forward(A_prev, W, B, activation):
     return {'A': act['A'], 'cache': cache}
 
 
-def apply_batchnorm(A, epsilon=0.000001):
+def apply_batchnorm(A, eps=0.00000000001):
     """
     Performs batchnorm on the received activation values of a given layer.
     :param A: the activation values of a given layer
-    :param epsilon: to avoid division by 0
+    :param eps: to avoid division by 0
     :return: NA - the normalized activation values, based on the formula learned in class
     """
-    return (A - np.mean(A)) / np.sqrt(np.var(A) + epsilon)
+    return (A - np.mean(A)) / np.sqrt(np.var(A) + eps)
 
 
 def L_model_forward(X, parameters, use_batchnorm):
@@ -129,13 +109,13 @@ def L_model_forward(X, parameters, use_batchnorm):
     return A, caches
 
 
-def compute_cost(AL, Y):
+def compute_cost(AL, Y, eps=0.00000000001):
     """
     Implements the cost function defined by equation. The requested cost function is categorical cross-entropy loss
     :param AL: probability vector corresponding to your label predictions, shape (num_of_classes, number of examples)
     :param Y: the labels vector (i.e. the ground truth)
+    :param eps: small number to avoid log of 0
     :return: cost – the cross-entropy cost
     """
-    eps = 0.00000000001
     loss = -(1 / len(Y)) * (Y * np.log(AL + eps) + (1 - Y) * np.log(1 - AL + eps))
     return np.sum(loss * Y, axis=0)  # keep only loss from positive class

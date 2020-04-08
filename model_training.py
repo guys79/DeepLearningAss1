@@ -54,7 +54,8 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
     Y_train, Y_val = Y
     batches = get_batches(batch_size, X_train, Y_train)
     parameters = initialize_parameters(layers_dims)
-    best_val_cost = -1
+    best_val_cost_prev_round = -1
+    best_val_cost_curr_round = -1
     costs = []
     epoch = 1
     iteration = 0
@@ -67,25 +68,27 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size,
             AL, caches = L_model_forward(X_batch, parameters, use_batchnorm)
             grads = L_model_backward(AL, Y_batch, caches)
             update_parameters(parameters, grads, learning_rate)
+            val_cost = np.sum(compute_cost(L_model_forward(X_val, parameters, use_batchnorm)[0], Y_val))
+            if best_val_cost_curr_round == -1 or val_cost < best_val_cost_curr_round:
+                best_val_cost_curr_round = val_cost  # save best validation cost
 
             # do every iterations_to_check iterations
             if iteration % iterations_to_check == 0:
                 batch_cost = np.sum(compute_cost(AL, Y_batch))
-                val_cost = np.sum(compute_cost(L_model_forward(X_val, parameters, use_batchnorm)[0], Y_val))
-                if best_val_cost == -1:
-                    best_val_cost = val_cost + cost_tier_size  # initial value
+                if best_val_cost_prev_round == -1:
+                    best_val_cost_prev_round = best_val_cost_curr_round + cost_tier_size  # initial value
                 costs.append(batch_cost)
                 batch_acc = Predict(X_batch, Y_batch, parameters)
                 val_acc = Predict(X_val, Y_val, parameters)
-                print('iter=%d batch_cost=%d val_cost=%d (best=%d) batch_acc=%.4f val_acc=%.4f'
-                      % (iteration, batch_cost, val_cost, best_val_cost, batch_acc, val_acc))
+                print('epoch=%d iter=%d batch_cost=%d val_cost=%d batch_acc=%.4f val_acc=%.4f'
+                      % (epoch, iteration, batch_cost, best_val_cost_curr_round, batch_acc, val_acc))
                 with open('log.csv', 'a', newline='') as log:
                     log_writer = csv.writer(log)
-                    log_writer.writerow([epoch, iteration, batch_cost, val_cost, batch_acc, val_acc])
-                if val_cost > best_val_cost - cost_tier_size:  # no improvement
+                    log_writer.writerow([epoch, iteration, batch_cost, best_val_cost_curr_round, batch_acc, val_acc])
+                if best_val_cost_curr_round > best_val_cost_prev_round - cost_tier_size:  # no improvement
                     done = True
                     break  # end training
-                best_val_cost = val_cost
+                best_val_cost_prev_round = best_val_cost_curr_round
 
             iteration += 1
             if iteration == num_iterations:
