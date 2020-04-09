@@ -29,8 +29,7 @@ def get_batches(batch_size, x_train, y_train):
     return batches
 
 
-def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, use_batchnorm,
-                  iterations_in_round=100, cost_tier_size=1):
+def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, use_batchnorm, iters_in_round=100):
     """
     Implements a L-layer neural network. All layers but the last should have the ReLU activation function,
     and the final layer will apply the softmax activation function. The size of the output layer should be equal to
@@ -43,9 +42,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, 
     :param num_iterations: max epochs
     :param batch_size: the number of examples in a single training batch
     :param use_batchnorm: to batchnorm the output of layers
-    :param save_cost_at: iteration modulo in which to save cost of output
-    :param cost_tier_size: accuracy tier size for knowing when to stop training
-    :param iterations_in_round: length of spree of epochs in same acc_tier to stop training at
+    :param iters_in_round: length of spree of epochs in same acc_tier to stop training at
     :return: parameters – the parameters learnt by the system during the training
             costs – the values of the cost function (calculated by the compute_cost function)
             One value is to be saved after each 100 training iterations (e.g. 3000 iterations -> 30 values)
@@ -54,8 +51,9 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, 
     Y_train, Y_val = Y
     batches = get_batches(batch_size, X_train, Y_train)
     parameters = initialize_parameters(layers_dims)
-    best_val_cost_prev_round = -1
-    best_val_cost_curr_round = -1
+    # best_val_cost_prev_round = -1
+    best_val_cost = -1
+    iters_with_no_improvement = 0
     costs = []
     epoch = 1
     iteration = 0
@@ -65,35 +63,33 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, 
         log_writer.writerow(['epoch', 'iteration', 'val_cost', 'val_acc'])
     while not done:
         for X_batch, Y_batch in batches:
+            iteration += 1
             AL, caches = L_model_forward(X_batch, parameters, use_batchnorm)
             grads = L_model_backward(AL, Y_batch, caches)
             update_parameters(parameters, grads, learning_rate)
-            val_cost = np.sum(compute_cost(L_model_forward(X_val, parameters, use_batchnorm)[0], Y_val))
-            if best_val_cost_curr_round == -1 or val_cost < best_val_cost_curr_round:
-                best_val_cost_curr_round = val_cost  # save best validation cost
+            AL_val = L_model_forward(X_val, parameters, use_batchnorm)[0]
+            val_cost = compute_cost(AL_val, Y_val)
+            if best_val_cost == -1 or val_cost < best_val_cost:
+                best_val_cost = val_cost
+                iters_with_no_improvement = 0
+            else:
+                iters_with_no_improvement += 1
 
-            # do every iterations_to_check iterations
-            if iteration % iterations_in_round == 0:
-                costs.append(best_val_cost_curr_round)
-                if best_val_cost_prev_round == -1:
-                    best_val_cost_prev_round = best_val_cost_curr_round + cost_tier_size  # initial value
+            # do every iterations_in_round iterations
+            if iteration % iters_in_round == 0:
+                costs.append(val_cost)
                 val_acc = Predict(X_val, Y_val, parameters, use_batchnorm)
-                print('epoch=%d iter=%d val_cost=%d val_acc=%.4f'
-                      % (epoch, iteration, best_val_cost_curr_round, val_acc))
+                print('epoch=%d iter=%d val_cost=%.4f val_acc=%.4f'
+                      % (epoch, iteration, best_val_cost, val_acc))
                 with open('log.csv', 'a', newline='') as log:
                     log_writer = csv.writer(log)
-                    log_writer.writerow([epoch, iteration, best_val_cost_curr_round, val_acc])
-                if best_val_cost_curr_round > best_val_cost_prev_round - cost_tier_size:  # no improvement
-                    done = True
-                    break  # end training
-                best_val_cost_prev_round = best_val_cost_curr_round
+                    log_writer.writerow([epoch, iteration, best_val_cost, val_acc])
 
-            iteration += 1
-            if iteration == num_iterations:
+            if iteration == num_iterations or iters_with_no_improvement == iters_in_round:
                 done = True
                 break  # end training
         epoch += 1
-    print('epochs = %d' % epoch)
+    print('epochs=%d iters=%d' % (epoch, iteration))
     return parameters, costs
 
 

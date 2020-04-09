@@ -75,16 +75,16 @@ def L_model_backward(AL, Y, caches):
     :return: gradients for the update of weights
     """
     grads = {}  # The dictionary with the gradients
-    depth = len(caches)
+    num_layers = len(caches)
     Y = Y.reshape(AL.shape)
     dAL = AL  # will be ignored for last layer
     
     # softmax layer
-    layer_grads = linear_activation_backward(dAL, caches[depth - 1] + [Y], activation='softmax')
-    grads['dA' + str(depth - 1)], grads['dW' + str(depth - 1)], grads['db' + str(depth - 1)] = layer_grads
+    layer_grads = linear_activation_backward(dAL, caches[num_layers - 1] + [Y], activation='softmax')
+    grads['dA' + str(num_layers - 1)], grads['dW' + str(num_layers - 1)], grads['db' + str(num_layers - 1)] = layer_grads
 
     # relu layers
-    for i in reversed(range(depth - 1)):
+    for i in reversed(range(num_layers - 1)):
         cache = caches[i]
         layer_grads = linear_activation_backward(grads['dA' + str(i + 1)], cache)
         grads['dA' + str(i)], grads['dW' + str(i)], grads['db' + str(i)] = layer_grads
@@ -101,8 +101,6 @@ def update_parameters(parameters, grads, learning_rate):
     """
     W = parameters['W']
     b = parameters['b']
-
-    # Gradient step
     for i in range(len(b)):
         W[i] -= learning_rate * grads["dW" + str(i)]
         b[i] -= learning_rate * grads["db" + str(i)]

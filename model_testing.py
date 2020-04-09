@@ -1,3 +1,5 @@
+import csv
+
 import keras
 import numpy as np
 import sklearn.model_selection
@@ -12,7 +14,7 @@ def get_data_set():
     (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
     x = np.concatenate((x_train, x_test), axis=0)
     y = np.concatenate((y_train, y_test), axis=0)
-    x = np.reshape(x, (x.shape[0], x.shape[1] * x.shape[2]))
+    x = np.reshape(x, (x.shape[0], x.shape[1] * x.shape[2])) / 255
 
     return x, y
 
@@ -56,7 +58,16 @@ X = [X_train, X_val]
 Y = [y_train,  y_val]
 layers_dims = [x.shape[1], 20, 7, 5, 10]
 use_batchnorm = True
+print('use_batchnorm = %s' % use_batchnorm)
 parameters, costs = L_layer_model(X, Y, layers_dims, 0.009, -1, 2000, use_batchnorm=use_batchnorm)
-print('train acc = %.4f' % Predict(X_train, y_train, parameters, use_batchnorm))
-print('test acc = %.4f' % Predict(X_test, y_test, parameters, use_batchnorm))
+train_acc = Predict(X_train, y_train, parameters, use_batchnorm)
+test_acc = Predict(X_test, y_test, parameters, use_batchnorm)
+print('train_acc = %.4f' % train_acc)
+print('test_acc = %.4f' % test_acc)
+
+with open('log.csv', 'a', newline='') as log:
+    log_writer = csv.writer(log)
+    log_writer.writerow([])
+    log_writer.writerow(['train_acc', 'test_acc'])
+    log_writer.writerow([train_acc, test_acc])
 
