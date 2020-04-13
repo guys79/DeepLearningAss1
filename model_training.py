@@ -39,6 +39,13 @@ def get_selected_neurons_index(selected):
     return np.array(indexes)
 
 def get_parameters_for_training(keep_prob, parameters, layers_dims):
+    """
+    This function will return teh parameters that needs to be trained
+    :param keep_prob: The probability for a neuron to not drop out
+    :param parameters: The model's parameters
+    :param layers_dims: The number of neurons in each layer in the model
+    :return: The parameters to train
+    """
     if keep_prob < 1:
         W_parameters = parameters['W']
         new_W_parameters = []
@@ -89,6 +96,14 @@ def get_parameters_for_training(keep_prob, parameters, layers_dims):
     return parameters_for_training,chosen_neurons
 
 def merge_results(parameters, parameters_for_training, chosen_neurons,keep_prob):
+    """
+    This function will merge the parameters after being trained with the model's parameters
+    :param parameters: The model's parameters
+    :param parameters_for_training: The parameters that have been trained
+    :param chosen_neurons: The neurons that didn't dropout
+    :param keep_prob: The probability for a neuron to not drop out
+    :return: The model's parameters
+    """
     #If there is no Dropout
     if keep_prob == 1:
         parameters = parameters_for_training
@@ -150,7 +165,7 @@ def merge_results(parameters, parameters_for_training, chosen_neurons,keep_prob)
     return parameters
 
 
-def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, use_batchnorm, iters_in_round=100,keep_prob =1, change_neurons_freq = 20):
+def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, use_batchnorm, iters_in_round=100,keep_prob =1):
     """
     Implements a L-layer neural network. All layers but the last should have the ReLU activation function,
     and the final layer will apply the softmax activation function. The size of the output layer should be equal to
@@ -167,6 +182,8 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, 
     :return: parameters – the parameters learnt by the system during the training
             costs – the values of the cost function (calculated by the compute_cost function)
             One value is to be saved after each 100 training iterations (e.g. 3000 iterations -> 30 values)
+    :param keep_prob: The probability for a neuron to not dropout (1 if there is no drop out)
+    :return:
     """
     X_train, X_val = X
     Y_train, Y_val = Y
