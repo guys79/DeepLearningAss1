@@ -218,8 +218,6 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, 
                     log_writer.writerow([epoch, iteration, best_val_cost, val_acc])
 
             if iteration == num_iterations or iters_with_no_improvement == iters_in_round:
-                print(iteration == num_iterations)
-                print(iters_with_no_improvement == iters_in_round)
                 done = True
                 break  # end training
         epoch += 1
