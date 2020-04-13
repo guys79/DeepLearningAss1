@@ -10,6 +10,7 @@ def initialize_parameters(layer_dims):
     """
     W = []
     b = []
+    #np.random.seed(0)
     for i in range(1, len(layer_dims)):
         rows = layer_dims[i]
         cols = layer_dims[i - 1]
@@ -86,7 +87,7 @@ def apply_batchnorm(A, eps=0.000001):
     return (A - np.mean(A, axis=0)) / np.sqrt(np.var(A, axis=0) + eps)
 
 
-def L_model_forward(X, parameters, use_batchnorm):
+def L_model_forward(X, parameters, use_batchnorm, keep_prob = 1):
     """
     Implements forward propagation for the [LINEAR->RELU]*(L-1)->LINEAR->SOFTMAX computation
     :param X: the data, numpy array of shape (input size, number of examples)
@@ -104,8 +105,10 @@ A    :param parameters: the initialized W and b parameters of each layer
     for i in range(num_layers):
         layer_output = linear_activation_forward(A, W[i], b[i], activations[i])
         A = layer_output['A']
+        A = A / keep_prob
         if i < num_layers - 1 and use_batchnorm:
             A = apply_batchnorm(A)
+
         caches.append(layer_output['cache'])
     return A, caches
 

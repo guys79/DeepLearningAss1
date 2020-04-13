@@ -1,10 +1,9 @@
 import csv
-
+from random import randrange, sample
 import numpy as np
 
 from backward_propagation import L_model_backward, update_parameters
 from forward_propagation import initialize_parameters, L_model_forward, compute_cost
-
 
 def get_batches(batch_size, x_train, y_train):
     """
@@ -29,7 +28,129 @@ def get_batches(batch_size, x_train, y_train):
     return batches
 
 
-def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, use_batchnorm, iters_in_round=100):
+def get_selected_neurons_index(selected):
+    indexes = []
+    for i in range(len(selected)):
+        if selected[i]:
+            indexes.append(i)
+    if len(indexes) == 0:
+        indexes.append(randrange(len(selected)))
+        selected[indexes[0]] = True
+    return np.array(indexes)
+
+def get_parameters_for_training(keep_prob, parameters, layers_dims):
+    if keep_prob < 1:
+        W_parameters = parameters['W']
+        new_W_parameters = []
+        b_parameters = parameters['b']
+        new_b_parameters = []
+        chosen_neurons = []
+
+        # For each layer
+        for index in range(1, len(layers_dims) - 1):
+            neurons_to_train = []
+            #neurons_to_train = np.random.rand((layers_dims[index])) < keep_prob
+            indices = sample(range(layers_dims[index]),int(keep_prob*layers_dims[index]))
+            #print("%d/%d" %(len(indices), layers_dims[index]))
+            for i in range(layers_dims[index]):
+                if i in indices:
+                    neurons_to_train.append(True)
+                else:
+                    neurons_to_train.append(False)
+            chosen_neurons.append(neurons_to_train)
+            w_for_layer = W_parameters[index - 1]
+            b_for_layer = b_parameters[index - 1]
+
+            if index == 1:
+                selected_previous = range(layers_dims[0])
+            else:
+                selected_previous = get_selected_neurons_index(chosen_neurons[len(chosen_neurons) - 2])
+            selected_now = get_selected_neurons_index(chosen_neurons[len(chosen_neurons) - 1])
+          #  print("amount chosen to train %d out if %d" % (len(selected_now), len(neurons_to_train)))
+            new_w_for_layer = w_for_layer[selected_now[:, None], selected_previous]
+            new_b_for_layer = b_for_layer[selected_now]
+           # print(new_w_for_layer.shape)
+           # print(new_b_for_layer.shape)
+           # print("guy")
+
+            new_W_parameters.append(new_w_for_layer)
+            new_b_parameters.append(new_b_for_layer)
+
+        new_W_parameters.append(W_parameters[len(layers_dims) - 2][:, selected_now])
+        new_b_parameters.append(b_parameters[len(layers_dims) - 2])
+        parameters_for_training = {'W': new_W_parameters, 'b': new_b_parameters}
+
+    else:
+        parameters_for_training = parameters
+        chosen_neurons = []
+        for i in range(1,len(layers_dims)-1):
+            chosen_in_layer = [True]*layers_dims[i]
+            chosen_neurons.append(chosen_in_layer)
+    return parameters_for_training,chosen_neurons
+
+def merge_results(parameters, parameters_for_training, chosen_neurons,keep_prob):
+    #If there is no Dropout
+    if keep_prob == 1:
+        parameters = parameters_for_training
+        return parameters
+
+    W_parameters = parameters['W']
+    trained_W_parameters = parameters_for_training['W']
+    b_parameters = parameters['b']
+    trained_b_parameters = parameters_for_training['b']
+
+    # First layer
+    chosen_neurons_in_layer = chosen_neurons[0]
+    W_parameters_in_layer = W_parameters[0]
+    trained_W_parameters_in_layer = trained_W_parameters[0]
+    b_parameters_in_layer = b_parameters[0]
+    trained_b_parameters_in_layer = trained_b_parameters[0]
+    trained_idx = 0
+    for neuron_idx in range(len(chosen_neurons_in_layer)):
+        if chosen_neurons_in_layer[neuron_idx]:
+            W_parameters_in_layer[neuron_idx] = trained_W_parameters_in_layer[trained_idx]
+            b_parameters_in_layer[neuron_idx] = trained_b_parameters_in_layer[trained_idx]
+            trained_idx+=1
+
+    # For each layer in the middle
+
+    for neuron_layer in range(1,len(chosen_neurons)):
+        W_parameters_in_layer = W_parameters[neuron_layer]
+        trained_W_parameters_in_layer = trained_W_parameters[neuron_layer]
+        b_parameters_in_layer = b_parameters[neuron_layer]
+        trained_b_parameters_in_layer = trained_b_parameters[neuron_layer]
+
+        rows = chosen_neurons[neuron_layer]
+        cols = chosen_neurons[neuron_layer-1]
+
+        trained_row_idx = 0
+        for row in range(len(rows)):
+            trained_col_idx = 0
+            if rows[row]:
+                for col in range(len(cols)):
+                    if cols[col]:
+                        W_parameters_in_layer[row][col] = trained_W_parameters_in_layer[trained_row_idx][trained_col_idx]
+                        trained_col_idx+=1
+                b_parameters_in_layer[row] = trained_b_parameters_in_layer[trained_row_idx]
+                trained_row_idx+=1
+
+    #Last layer
+    W_parameters_in_layer = W_parameters[len(W_parameters)-1]
+    trained_W_parameters_in_layer = trained_W_parameters[len(trained_W_parameters)-1]
+
+    trained_col_idx = 0
+    for col_idx in range(len(chosen_neurons[len(chosen_neurons)-1])):
+        if chosen_neurons[len(chosen_neurons)-1][col_idx]:
+            for row_idx in range(len(W_parameters_in_layer)):
+                W_parameters_in_layer[row_idx][col_idx] = trained_W_parameters_in_layer[row_idx][trained_col_idx]
+            trained_col_idx+=1
+
+
+    b_parameters[len(b_parameters) - 1] = trained_b_parameters[len(trained_b_parameters) - 1]
+    return parameters
+
+
+def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, use_batchnorm, iters_in_round=100,keep_prob =1, change_neurons_freq = 20):
     """
     Implements a L-layer neural network. All layers but the last should have the ReLU activation function,
     and the final layer will apply the softmax activation function. The size of the output layer should be equal to
@@ -51,22 +172,32 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, 
     Y_train, Y_val = Y
     batches = get_batches(batch_size, X_train, Y_train)
     parameters = initialize_parameters(layers_dims)
-    # best_val_cost_prev_round = -1
     best_val_cost = -1
     iters_with_no_improvement = 0
     costs = []
     epoch = 1
     iteration = 0
     done = False
+    """
+    layers_dims_shape = (layers_dims[0])
+    for index in range(1,len(layers_dims)):
+        layers_dims_shape+=(layers_dims[index])
+    """
+
     with open('log.csv', 'w', newline='') as log:
         log_writer = csv.writer(log)
         log_writer.writerow(['epoch', 'iteration', 'val_cost', 'val_acc'])
     while not done:
+
+#        if epoch % change_neurons_freq == 1:
+
         for X_batch, Y_batch in batches:
             iteration += 1
-            AL, caches = L_model_forward(X_batch, parameters, use_batchnorm)
+            parameters_for_training, chosen_neurons = get_parameters_for_training(keep_prob, parameters, layers_dims)
+            AL, caches = L_model_forward(X_batch, parameters_for_training, use_batchnorm, keep_prob = keep_prob)
             grads = L_model_backward(AL, Y_batch, caches)
-            update_parameters(parameters, grads, learning_rate)
+            update_parameters(parameters_for_training, grads, learning_rate)
+            parameters = merge_results(parameters, parameters_for_training, chosen_neurons, keep_prob)
             AL_val = L_model_forward(X_val, parameters, use_batchnorm)[0]
             val_cost = compute_cost(AL_val, Y_val)
             if best_val_cost == -1 or val_cost < best_val_cost:
@@ -74,6 +205,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, 
                 iters_with_no_improvement = 0
             else:
                 iters_with_no_improvement += 1
+
 
             # do every iterations_in_round iterations
             if iteration % iters_in_round == 0:
@@ -86,6 +218,8 @@ def L_layer_model(X, Y, layers_dims, learning_rate, num_iterations, batch_size, 
                     log_writer.writerow([epoch, iteration, best_val_cost, val_acc])
 
             if iteration == num_iterations or iters_with_no_improvement == iters_in_round:
+                print(iteration == num_iterations)
+                print(iters_with_no_improvement == iters_in_round)
                 done = True
                 break  # end training
         epoch += 1
