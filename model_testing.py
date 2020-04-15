@@ -59,7 +59,7 @@ Y = [y_train,  y_val]
 layers_dims = [x.shape[1], 20, 7, 5, 10]
 use_batchnorm = True
 print('use_batchnorm = %s' % use_batchnorm)
-parameters, costs = L_layer_model(X, Y, layers_dims, 0.009, -1, 2000, use_batchnorm=use_batchnorm)
+parameters, costs = L_layer_model(X, Y, layers_dims, 0.009, -1, 200, use_batchnorm=use_batchnorm)
 train_acc = Predict(X_train, y_train, parameters, use_batchnorm)
 test_acc = Predict(X_test, y_test, parameters, use_batchnorm)
 print('train_acc = %.4f' % train_acc)
